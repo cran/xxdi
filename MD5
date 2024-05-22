@@ -1,7 +1,7 @@
-00fc18a4abae0059715b17e6ac708d18 *DESCRIPTION
-84cd5b8a0db8056dd052b8dfd6a2ea8d *NAMESPACE
-3e273a268e98b249d1535244d0062566 *NEWS.md
-b08c74fec2db6f450c35fd38506421c9 *R/x_index.R
-18a632ae82de85928b34a0e9486387ac *R/xd_index.R
-89cbacf5c5bd7239505dcc7c50c4bd23 *man/x_index.Rd
-6fd27f69de8edbdc5e7a5ea323418260 *man/xd_index.Rd
+8b4c7a27ce6f5e23442d3713b68680ed *DESCRIPTION
+cf4856c909deff9e81f982a414b81d3b *NAMESPACE
+c2c4a5ee5daa69b3b0b26de452841e91 *NEWS.md
+9a5c11e974abaa10cd2e1e78b5da3fed *R/x_index.R
+631844510c850abbf62d65f741b48b75 *R/xd_index.R
+ace9669eb3d07028149d8ba08972bf6d *man/x_index.Rd
+8351c68a75263dace6d0829ff1a3aa82 *man/xd_index.Rd

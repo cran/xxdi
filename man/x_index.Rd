@@ -4,41 +4,43 @@
 \alias{x_index}
 \title{x_index}
 \usage{
-x_index(df, kw, id, cit, dlm = ";")
+x_index(df, kw, id, cit, dlm = ";", plot = FALSE)
 }
 \arguments{
-\item{df}{A data frame object containing bibliometric data}
+\item{df}{Data frame object containing bibliometric data. This data frame must have at least three columns: one for keywords, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.}
 
-\item{kw}{Column in df containing keywords}
+\item{kw}{Character string specifying the name of the column in "df" that contains keywords. Each cell in this column may contain no keywords (missing), a single keyword or multiple keywords separated by a specified delimiter.}
 
-\item{id}{Column in df containing IDs}
+\item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs.}
 
-\item{cit}{Column in df containing citations}
+\item{cit}{Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.}
 
-\item{dlm}{Delimiter in kw. Default set to ";"}
+\item{dlm}{Character string specifying the delimiter used in the "kw" column to separate multiple keywords within a single cell. The delimiter should be consistent across the entire "kw" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is ";".}
+
+\item{plot}{Logical value indicating whether to generate and display a plot of the x-index calculation. Set to TRUE or T to generate the plot, and FALSE or F to skip plot generation. The default is FALSE.}
 }
 \value{
-x-index value for institution
+x-index value and plot for institution.
 }
 \description{
-Compute x-index for an institution from an edge list
+This function calculates the x-index for an institution using bibliometric data from an edge list, with an optional plot visualisation.
 }
 \examples{
 dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
                    keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
                    id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
                    categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
-x_index(df = dat1, kw = "keywords", id = "id", cit = "citations", dlm = ";")
+x_index(df = dat1, kw = "keywords", id = "id", cit = "citations")
 
 dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
                   keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
                   id = c("123", "234", "345", "456", "567", "678", "789"),
                   categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
-x_index(df = dat2, kw = "keywords", id = "id", cit = "citations", dlm = "/")
+x_index(df = dat2, kw = "keywords", id = "id", cit = "citations", dlm = "/", plot = FALSE)
 
 dat3 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
                   keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
                   id = c(123, 234, 345, 456, 567, 678, 789),
                   categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
-x_index(df = dat3, kw = "keywords", id = "id", cit = "citations", dlm = ",")
+x_index(df = dat3, kw = "keywords", id = "id", cit = "citations", dlm = ",", plot = TRUE)
 }
