@@ -1,15 +1,17 @@
-#' @title x_index
+#' @title xc_index
 #'
-#' @description This is a standalone function that specifically calculates the x-index for an institution using bibliometric data from an edge list, with an optional plot visualisation. The function is suitable for including inside loops when plotting parameter is set to "FALSE" or "F".
+#' @description This is a standalone function that specifically calculates the xc-index for an institution using bibliometric data from an edge list, with an optional plot visualisation. The function is suitable for including inside loops when plotting parameter is set to "FALSE" or "F".
 #'
 #' @param df Data frame object containing bibliometric data. This data frame must have at least three columns: one for keywords, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.
 #' @param kw Character string specifying the name of the column in "df" that contains keywords. Each cell in this column may contain no keywords (missing), a single keyword or multiple keywords separated by a specified delimiter.
+#' @param cat Character string specifying the name of the column in "df" that contains categories. Each cell in this column may contain no categories (missing), a single category or multiple categories separated by a specified delimiter.
 #' @param id Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs.
 #' @param cit Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.
-#' @param dlm Character string specifying the delimiter used in the "kw" column to separate multiple keywords within a single cell. The delimiter should be consistent across the entire "kw" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".
-#' @param plot Logical value indicating whether to generate and display a plot of the x-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".
+#' @param kdlm Character string specifying the delimiter used in the "kw" column to separate multiple keywords within a single cell. The delimiter should be consistent across the entire "kw" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".
+#' @param cdlm Character string specifying the delimiter used in the "cat" column to separate multiple categories within a single cell. The delimiter should be consistent across the entire "cat" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".
+#' @param plot Logical value indicating whether to generate and display a plot of the xc-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".
 #'
-#' @return x-index value and plot for institution.
+#' @return xc-index value and plot for institution.
 #'
 #' @examples
 #' # Create an example data frame
@@ -17,25 +19,9 @@
 #'                    keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
 #'                    id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
 #'                    categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
-#' # Calculate x-index
-#' x_index(df = dat1, kw = "keywords", id = "id", cit = "citations")
-#'
-#' # Create another example data frame
-#' dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-#'                   keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
-#'                   id = c("123", "234", "345", "456", "567", "678", "789"),
-#'                   categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
-#' # Calculate x-index
-#' x_index(df = dat2, kw = "keywords", id = "id", cit = "citations", dlm = "/", plot = FALSE)
-#'
-#' # Create another example data frame
-#' dat3 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-#'                   keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
-#'                   id = c(123, 234, 345, 456, 567, 678, 789),
-#'                   categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
-#' # Calculate x-index and produce plot
-#' x_index(df = dat3, kw = "keywords", id = "id", cit = "citations", dlm = ",", plot = TRUE)
-#' @export x_index
+#' # Calculate xc-index and produce plot
+#' xc_index(df = dat1, kw = "keywords", cat = "categories", id = "id", cit = "citations", plot = TRUE)
+#' @export xc_index
 #' @importFrom tidyr separate_rows
 #' @importFrom dplyr %>%
 #' @importFrom dplyr arrange
@@ -58,8 +44,7 @@
 #' @importFrom ggplot2 xlab
 #' @importFrom ggplot2 ylab
 
-# Function to calculate x-index
-x_index <- function(df, kw, id, cit, dlm = ";", plot = FALSE) {
+xc_index <- function(df, kw, cat, id, cit, kdlm = ";", cdlm = ";", plot = FALSE) {
 
   # Load required libraries
   if (!requireNamespace("Matrix", quietly = TRUE)) {
@@ -80,34 +65,36 @@ x_index <- function(df, kw, id, cit, dlm = ";", plot = FALSE) {
 
   # Working data frame
   dat <- df %>%
-    select(kw = {{kw}}, id = {{id}}, cit = {{cit}}) %>%
-    mutate(kw = as.character(kw), id = as.character(id), cit = as.numeric(cit)) %>%
+    select(kw = {{kw}}, cat = {{cat}}, id = {{id}}, cit = {{cit}}) %>%
+    mutate(kw = as.character(kw), cat = as.character(cat), id = as.character(id), cit = as.numeric(cit)) %>%
     na.omit()
 
   # Clean dataset
   dat <- dat %>%
-    separate_rows(kw, sep = dlm) %>%
+    separate_rows(kw, sep = kdlm) %>%
+    separate_rows(cat, sep = cdlm) %>%
+    mutate(kw = trimws(kw), cat = trimws(cat), kw = paste0(kw, " (", cat, ")")) %>%
     filter(kw != "") %>%
     na.omit()
 
   # Create unique keywords and IDs
-  unique_keywords <- unique(trimws(dat$kw))
+  unique_keywords <- unique(dat$kw)
   unique_ids <- unique(dat$id)
 
   # Create a sparse matrix
   citation_matrix <- sparseMatrix(
     i = match(dat$id, unique_ids),
-    j = match(trimws(dat$kw), unique_keywords),
+    j = match(dat$kw, unique_keywords),
     x = dat$cit,
     dims = c(length(unique_ids), length(unique_keywords)),
     dimnames = list(unique_ids, unique_keywords)
   )
 
-  # Sum citations for each keyword
+  # Sum citations for each categorical keyword
   col_sum_citation_matrix <- colSums(citation_matrix)
 
-  # Calculate x-index
-  x_index <- index.h(unname(col_sum_citation_matrix))
+  # Calculate xc-index
+  xc_index <- index.h(unname(col_sum_citation_matrix))
 
   if (plot) {
     # Prepare data for plotting
@@ -115,16 +102,17 @@ x_index <- function(df, kw, id, cit, dlm = ";", plot = FALSE) {
       arrange(desc(cit)) %>%
       mutate(kw = factor(kw, levels = kw))
 
-    # Create and print ggplot for x-index
+    # Create and print ggplot for xc-index
     print(ggplot(df_plot) +
             geom_point(aes(x = kw, y = cit), shape = 16) +
-            geom_hline(yintercept = x_index, color = "#ff0000", linetype = 2) +
-            xlab("Keywords") +
+            geom_hline(yintercept = xc_index, color = "#ff0000", linetype = 2) +
+            xlab("Categorical Keywords") +
             ylab("Total Citations") +
-            ggtitle(label = "x-index") +
+            ggtitle(label = "xc-index") +
             theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)))
   }
 
   # Return value
-  return(x_index)
+  return(xc_index)
 }
+
