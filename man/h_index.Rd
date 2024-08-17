@@ -4,12 +4,12 @@
 \alias{h_index}
 \title{h_index}
 \usage{
-h_index(df, id, cit, plot = FALSE)
+h_index(df, id = NULL, cit, plot = FALSE)
 }
 \arguments{
 \item{df}{Data frame object containing bibliometric data. This data frame must have at least three columns: one for keywords, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.}
 
-\item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs.}
+\item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs. Only required when 'plot' parameter is set to "TRUE". Default set to NULL.}
 
 \item{cit}{Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.}
 
@@ -28,7 +28,7 @@ dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
                    id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
                    categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
 # Calculate h-index
-h_index(df = dat1, id = "id", cit = "citations")
+h_index(df = dat1, cit = "citations")
 
 # Create another example data frame
 dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),

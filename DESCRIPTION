@@ -1,7 +1,7 @@
 Package: xxdi
 Type: Package
 Title: Calculate Expertise Indices
-Version: 1.1.0
+Version: 1.2.3
 Authors@R: c(
     person("Nilabhra Rohan", "Das", , "nr.das@yahoo.com", role = c("cre", "aut"), comment = c(ORCID = "0000-0001-8187-0080")),
     person("Abhirup", "Nandy", , "abhirupnandy.online@gmail.com", role = "aut", comment = c(ORCID = "0000-0001-8618-0847"))
@@ -15,8 +15,8 @@ Imports: agop (>= 0.2.4), dplyr (>= 1.1.4), ggplot2 (>= 3.5.0), Matrix
 Encoding: UTF-8
 RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2024-06-21 23:19:45 UTC; titas
+Packaged: 2024-08-12 18:38:34 UTC; titas
 Author: Nilabhra Rohan Das [cre, aut] (<https://orcid.org/0000-0001-8187-0080>),
   Abhirup Nandy [aut] (<https://orcid.org/0000-0001-8618-0847>)
 Repository: CRAN
-Date/Publication: 2024-06-21 23:30:02 UTC
+Date/Publication: 2024-08-17 03:50:02 UTC

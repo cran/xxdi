@@ -7,6 +7,7 @@
 #' @param cat Character string specifying the name of the column in "df" that contains categories. Each cell in this column may contain no categories (missing), a single category or multiple categories separated by a specified delimiter.
 #' @param id Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs.
 #' @param cit Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.
+#' @param type "h" for Hirsch's h-type index or "g" for Egghe's g-type index. Default set to "h".
 #' @param kdlm Character string specifying the delimiter used in the "kw" column to separate multiple keywords within a single cell. The delimiter should be consistent across the entire "kw" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".
 #' @param cdlm Character string specifying the delimiter used in the "cat" column to separate multiple categories within a single cell. The delimiter should be consistent across the entire "cat" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".
 #' @param plot Logical value indicating whether to generate and display a plot of the xc-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".
@@ -15,12 +16,14 @@
 #'
 #' @examples
 #' # Create an example data frame
-#' dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
+#' dat <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
 #'                    keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
 #'                    id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
 #'                    categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
-#' # Calculate xc-index and produce plot
-#' xc_index(df = dat1, kw = "keywords", cat = "categories", id = "id", cit = "citations", plot = TRUE)
+#' # Calculate g-type xc-index
+#' xc_index(df = dat, kw = "keywords", cat = "categories", id = "id", cit = "citations", type = "g")
+#' # Calculate h-type xc-index and produce plot
+#' xc_index(df = dat, kw = "keywords", cat = "categories", id = "id", cit = "citations", plot = TRUE)
 #' @export xc_index
 #' @importFrom tidyr separate_rows
 #' @importFrom dplyr %>%
@@ -33,6 +36,7 @@
 #' @importFrom Matrix colSums
 #' @importFrom Matrix sparseMatrix
 #' @importFrom agop index.h
+#' @importFrom agop index.g
 #' @importFrom stats na.omit
 #' @importFrom ggplot2 aes
 #' @importFrom ggplot2 element_text
@@ -44,7 +48,7 @@
 #' @importFrom ggplot2 xlab
 #' @importFrom ggplot2 ylab
 
-xc_index <- function(df, kw, cat, id, cit, kdlm = ";", cdlm = ";", plot = FALSE) {
+xc_index <- function(df, kw, cat, id, cit, type = "h", kdlm = ";", cdlm = ";", plot = FALSE) {
 
   # Load required libraries
   if (!requireNamespace("Matrix", quietly = TRUE)) {
@@ -94,7 +98,12 @@ xc_index <- function(df, kw, cat, id, cit, kdlm = ";", cdlm = ";", plot = FALSE)
   col_sum_citation_matrix <- colSums(citation_matrix)
 
   # Calculate xc-index
-  xc_index <- index.h(unname(col_sum_citation_matrix))
+  if (type == "h") {
+    xc_index <- index.h(unname(col_sum_citation_matrix))
+  }
+  if (type == "g") {
+    xc_index <- index.g(unname(col_sum_citation_matrix))
+  }
 
   if (plot) {
     # Prepare data for plotting

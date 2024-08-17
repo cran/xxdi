@@ -4,7 +4,17 @@
 \alias{xc_index}
 \title{xc_index}
 \usage{
-xc_index(df, kw, cat, id, cit, kdlm = ";", cdlm = ";", plot = FALSE)
+xc_index(
+  df,
+  kw,
+  cat,
+  id,
+  cit,
+  type = "h",
+  kdlm = ";",
+  cdlm = ";",
+  plot = FALSE
+)
 }
 \arguments{
 \item{df}{Data frame object containing bibliometric data. This data frame must have at least three columns: one for keywords, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.}
@@ -16,6 +26,8 @@ xc_index(df, kw, cat, id, cit, kdlm = ";", cdlm = ";", plot = FALSE)
 \item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs.}
 
 \item{cit}{Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.}
+
+\item{type}{"h" for Hirsch's h-type index or "g" for Egghe's g-type index. Default set to "h".}
 
 \item{kdlm}{Character string specifying the delimiter used in the "kw" column to separate multiple keywords within a single cell. The delimiter should be consistent across the entire "kw" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".}
 
@@ -31,10 +43,12 @@ This is a standalone function that specifically calculates the xc-index for an i
 }
 \examples{
 # Create an example data frame
-dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
+dat <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
                    keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
                    id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
                    categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
-# Calculate xc-index and produce plot
-xc_index(df = dat1, kw = "keywords", cat = "categories", id = "id", cit = "citations", plot = TRUE)
+# Calculate g-type xc-index
+xc_index(df = dat, kw = "keywords", cat = "categories", id = "id", cit = "citations", type = "g")
+# Calculate h-type xc-index and produce plot
+xc_index(df = dat, kw = "keywords", cat = "categories", id = "id", cit = "citations", plot = TRUE)
 }

@@ -9,6 +9,7 @@
 #' @param cit Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.
 #' @param dlm1 Character string specifying the delimiter used in the "p1" column to separate multiple keywords/categories within a single cell. The delimiter should be consistent across the entire "p1" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".
 #' @param dlm2 Character string specifying the delimiter used in the "p2" column to separate multiple categories within a single cell. The delimiter should be consistent across the entire "p2" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".
+#' @param hg Logical value indicating whether to compute Hirsch's h- and Egghe's g-indices. Default set to "FALSE".
 #'
 #' @return x-index value, and/or xd-index value, and/or xc-index value for institution.
 #'
@@ -21,9 +22,9 @@
 #' # Calculate x-index
 #' xdc_index(df = dat1, p1 = "keywords", id = "id", cit = "citations")
 #' # Calculate xd-index
-#' xdc_index(df = dat1, p1 = "categories", id = "id", cit = "citations")
+#' xdc_index(df = dat1, p1 = "categories", id = "id", cit = "citations", hg = TRUE)
 #' # Calculate x-index, xd-index, and xc-index together
-#' xdc_index(df = dat1, p1 = "keywords", p2 = "categories", id = "id", cit = "citations")
+#' xdc_index(df = dat1, p1 = "keywords", p2 = "categories", id = "id", cit = "citations", hg = TRUE)
 #' @export xdc_index
 #' @importFrom tidyr separate_rows
 #' @importFrom dplyr %>%
@@ -36,22 +37,23 @@
 #' @importFrom Matrix colSums
 #' @importFrom Matrix sparseMatrix
 #' @importFrom agop index.h
+#' @importFrom agop index.g
 #' @importFrom stats na.omit
 
 # Function to calculate x-index
-xdc_index <- function(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";") {
+xdc_index <- function(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";", hg = FALSE) {
 
   # Load required libraries
-  if (!requireNamespace("Matrix", quietly = TRUE)) {
+  if (!requireNamespace("Matrix", quietly = TRUE)) {                            # require Matrix
     stop("Package 'Matrix' is required but not installed.")
   }
-  if (!requireNamespace("agop", quietly = TRUE)) {
+  if (!requireNamespace("agop", quietly = TRUE)) {                              # require agop
     stop("Package 'agop' is required but not installed.")
   }
-  if (!requireNamespace("tidyr", quietly = TRUE)) {
+  if (!requireNamespace("tidyr", quietly = TRUE)) {                             # require tidyr
     stop("Package 'tidyr' is required but not installed.")
   }
-  if (!requireNamespace("dplyr", quietly = TRUE)) {
+  if (!requireNamespace("dplyr", quietly = TRUE)) {                             # require dplyr
     stop("Package 'dplyr' is required but not installed.")
   }
 
@@ -86,7 +88,8 @@ xdc_index <- function(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";") {
     col_sum_citation_matrix <- colSums(citation_matrix)
 
     # Calculate x-index
-    x_index <- index.h(unname(col_sum_citation_matrix))
+    x_index_h <- index.h(unname(col_sum_citation_matrix))                       # h-type x-index
+    x_index_g <- index.g(unname(col_sum_citation_matrix))                       # g-type x-index
 
     ### Calculate xd-index
     # Working data frame
@@ -118,7 +121,8 @@ xdc_index <- function(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";") {
     col_sum_citation_matrix <- colSums(citation_matrix)
 
     # Calculate xd-index
-    xd_index <- index.h(unname(col_sum_citation_matrix))
+    xd_index_h <- index.h(unname(col_sum_citation_matrix))                      # h-type xd-index
+    xd_index_g <- index.g(unname(col_sum_citation_matrix))                      # g-type xd-index
 
     ### Calculate xc-index
     # Working data frame
@@ -152,13 +156,46 @@ xdc_index <- function(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";") {
     col_sum_citation_matrix <- colSums(citation_matrix)
 
     # Calculate xc-index
-    xc_index <- index.h(unname(col_sum_citation_matrix))
+    xc_index_h <- index.h(unname(col_sum_citation_matrix))                      # h-type xc-idnex
+    xc_index_g <- index.g(unname(col_sum_citation_matrix))                      # g-type xc-index
 
-    # Create output df
-    df_values <- c(x_index, xd_index, xc_index) # Vector of index values
-    matrix_data <- matrix(df_values, nrow = 1, byrow = TRUE) # Transform into matrix
-    df_out <- data.frame(matrix_data) # Convert matrix into data frame object
-    colnames(df_out) <- c("x-index", "xd-index", "xc-index") # Assign column names
+    if (hg) {
+      ### h-index
+      # Working data frame
+      dat4 <- df %>%
+        select(id = {{id}}, cit = {{cit}}) %>%
+        mutate(id = as.character(id), cit = as.numeric(cit)) %>%
+        na.omit()
+
+      # Calculate h-index
+      h_index_value <- index.h(dat4$cit)
+
+      ### g-index
+      # Working data frame
+      dat5 <- df %>%
+        select(id = {{id}}, cit = {{cit}}) %>%
+        mutate(id = as.character(id), cit = as.numeric(cit)) %>%
+        na.omit()
+
+      # Calculate g-index
+      g_index_value <- index.g(dat5$cit)
+
+      ### Create output df
+      df_values <- c(h_index_value, x_index_h, xd_index_h, xc_index_h,          # row of h-type index values
+                     g_index_value, x_index_g, xd_index_g, xc_index_g)          # row of g-type index values
+      matrix_data <- matrix(df_values, nrow = 2, ncol = 4, byrow = TRUE)        # Transform into matrix
+      df_out <- data.frame(matrix_data)                                         # Convert matrix into data frame object
+      colnames(df_out) <- c("index", "x-index", "xd-index", "xc-index")                    # Assign column names
+      rownames(df_out) <- c("h-type", "g-type")                                 # Assign row names
+    } else {
+      ### Create output df
+      df_values <- c(x_index_h, xd_index_h, xc_index_h,                         # row of h-type index values
+                     x_index_g, xd_index_g, xc_index_g)                         # row of g-type index values
+      matrix_data <- matrix(df_values, nrow = 2, ncol = 3, byrow = TRUE)        # Transform into matrix
+      df_out <- data.frame(matrix_data)                                         # Convert matrix into data frame object
+      colnames(df_out) <- c("x-index", "xd-index", "xc-index")                  # Assign column names
+      rownames(df_out) <- c("h-type", "g-type")                                 # Assign row names
+    }
 
     # Return value
     return(df_out)
@@ -193,9 +230,47 @@ xdc_index <- function(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";") {
     col_sum_citation_matrix <- colSums(citation_matrix)
 
     # Calculate xdc-index
-    xdc_index <- index.h(unname(col_sum_citation_matrix))
+    xdc_index_h <- index.h(unname(col_sum_citation_matrix))                     # h-type index
+    xdc_index_g <- index.g(unname(col_sum_citation_matrix))                     # g-type index
+
+    if (hg) {
+      ### h-index
+      # Working data frame
+      dath <- df %>%
+        select(id = {{id}}, cit = {{cit}}) %>%
+        mutate(id = as.character(id), cit = as.numeric(cit)) %>%
+        na.omit()
+
+      # Calculate h-index
+      h_index_value <- index.h(dath$cit)
+
+      ### g-index
+      # Working data frame
+      datg <- df %>%
+        select(id = {{id}}, cit = {{cit}}) %>%
+        mutate(id = as.character(id), cit = as.numeric(cit)) %>%
+        na.omit()
+
+      # Calculate g-index
+      g_index_value <- index.g(datg$cit)
+
+      # Create output df
+      df_values <- c(h_index_value, xdc_index_h,
+                     g_index_value, xdc_index_g)
+      matrix_data <- matrix(df_values, nrow = 2, ncol = 2, byrow = TRUE)
+      df_out <- data.frame(matrix_data)
+      colnames(df_out) <- c("index", "x-type")                                  # Assign column names
+      rownames(df_out) <- c("h-type", "g-type")                                 # assign row names
+    } else {
+      # Create output df
+      df_values <- c(xdc_index_h, xdc_index_g)
+      matrix_data <- matrix(df_values, nrow = 1, byrow = TRUE)
+      df_out <- data.frame(matrix_data)
+      colnames(df_out) <- c("h-type", "g-type")
+      rownames(df_out) <- c("x-type")
+    }
 
     # Return value
-    return(xdc_index)
+    return(df_out)
   }
 }

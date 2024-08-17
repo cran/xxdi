@@ -1,3 +1,9 @@
+# xxdi 1.2.0
+
+* Added options to compute h-type and g-type values of x-type indices
+
+--------------------------------------------------------------------------------
+
 # xxdi 1.1.0
 
 * Added function 'xc_index' for calculating xc-index.

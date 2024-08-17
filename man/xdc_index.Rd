@@ -4,7 +4,7 @@
 \alias{xdc_index}
 \title{xdc_index}
 \usage{
-xdc_index(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";")
+xdc_index(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";", hg = FALSE)
 }
 \arguments{
 \item{df}{Data frame object containing bibliometric data. This data frame must have at least three columns: one for keywords/categories, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.}
@@ -20,6 +20,8 @@ xdc_index(df, p1, p2 = NULL, id, cit, dlm1 = ";", dlm2 = ";")
 \item{dlm1}{Character string specifying the delimiter used in the "p1" column to separate multiple keywords/categories within a single cell. The delimiter should be consistent across the entire "p1" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".}
 
 \item{dlm2}{Character string specifying the delimiter used in the "p2" column to separate multiple categories within a single cell. The delimiter should be consistent across the entire "p2" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".}
+
+\item{hg}{Logical value indicating whether to compute Hirsch's h- and Egghe's g-indices. Default set to "FALSE".}
 }
 \value{
 x-index value, and/or xd-index value, and/or xc-index value for institution.
@@ -36,7 +38,7 @@ dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
 # Calculate x-index
 xdc_index(df = dat1, p1 = "keywords", id = "id", cit = "citations")
 # Calculate xd-index
-xdc_index(df = dat1, p1 = "categories", id = "id", cit = "citations")
+xdc_index(df = dat1, p1 = "categories", id = "id", cit = "citations", hg = TRUE)
 # Calculate x-index, xd-index, and xc-index together
-xdc_index(df = dat1, p1 = "keywords", p2 = "categories", id = "id", cit = "citations")
+xdc_index(df = dat1, p1 = "keywords", p2 = "categories", id = "id", cit = "citations", hg = TRUE)
 }
