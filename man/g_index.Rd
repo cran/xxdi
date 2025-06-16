@@ -7,7 +7,7 @@
 g_index(df, id = NULL, cit, plot = FALSE)
 }
 \arguments{
-\item{df}{Data frame object containing bibliometric data. This data frame must have at least three columns: one for keywords, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.}
+\item{df}{Data frame object containing bibliometric data. This data frame must have at least two columns: one for keywords and one for citation counts. An optional column for unique identifiers can be included. Each row in the data frame should represent a document or publication.}
 
 \item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs. Only required when 'plot' parameter is set to "TRUE". Default set to NULL.}
 
@@ -16,10 +16,10 @@ g_index(df, id = NULL, cit, plot = FALSE)
 \item{plot}{Logical value indicating whether to generate and display a plot of the g-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".}
 }
 \value{
-g-index value and plot for institution.
+g-index value and plot.
 }
 \description{
-This function calculates the g-index for an institution using bibliometric data from an edge list, with an optional plot visualisation.
+Calculate g-index for an institution using bibliometric data from an edge list, with an optional visualisation of ranked citation scores.
 }
 \examples{
 # Create an example data frame
@@ -32,17 +32,20 @@ g_index(df = dat1, cit = "citations")
 
 # Create another example data frame
 dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                  keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
-                  id = c("123", "234", "345", "456", "567", "678", "789"),
-                  categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
+                   keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
+                   id = c("123", "234", "345", "456", "567", "678", "789"),
+                   categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
+
 # Calculate g-index
 g_index(df = dat2, id = "id", cit = "citations", plot = FALSE)
 
 # Create another example data frame
 dat3 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                  keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
-                  id = c(123, 234, 345, 456, 567, 678, 789),
-                  categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
+                   keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
+                   id = c(123, 234, 345, 456, 567, 678, 789),
+                   categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
+
 # Calculate g-index and produce plot
 g_index(df = dat3, id = "id", cit = "citations", plot = TRUE)
+
 }

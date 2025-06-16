@@ -22,10 +22,10 @@ xd_index(df, cat, id, cit, type = "h", dlm = ";", plot = FALSE)
 \item{plot}{Logical value indicating whether to generate and display a plot of the xd-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".}
 }
 \value{
-xd-index value and plot for institution.
+xd-index value and plot.
 }
 \description{
-This is a standalone function that specifically calculates the xd-index for an institution using bibliometric data from an edge list, with an optional plot visualisation. The function is suitable for including inside loops when plotting parameter is set to "FALSE" or "F".
+Calculates xd-index for an institution using bibliometric data from an edge list, with an optional visualisation of ranked citation scores. The function is suitable for including inside loops when plotting parameter is set to "FALSE" or "F".
 }
 \examples{
 # Create an example data frame
@@ -33,22 +33,26 @@ dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
                    keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
                    id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
                    categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
+
 # Calculate h-type xd-index
 xd_index(df = dat1, cat = "categories", id = "id", cit = "citations")
 
 # Create another example data frame
 dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                  keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
-                  id = c("123", "234", "345", "456", "567", "678", "789"),
-                  categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
+                   keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
+                   id = c("123", "234", "345", "456", "567", "678", "789"),
+                   categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
+
 # Calculate g-type xd-index
 xd_index(df = dat2, cat = "categories", id = "id", cit = "citations", type = "g", dlm = "/")
 
 # Create another example data frame
 dat3 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                  keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
-                  id = c(123, 234, 345, 456, 567, 678, 789),
-                  categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
+                   keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
+                   id = c(123, 234, 345, 456, 567, 678, 789),
+                   categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
+
 # Calculate h-type xd-index and produce plot
 xd_index(df = dat3, cat = "categories", id = "id", cit = "citations", dlm = ":", plot = TRUE)
+
 }
