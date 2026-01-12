@@ -2,51 +2,46 @@
 % Please edit documentation in R/h_index.R
 \name{h_index}
 \alias{h_index}
-\title{h_index}
+\title{h_index - Hirsch's h-index}
 \usage{
 h_index(df, id = NULL, cit, plot = FALSE)
 }
 \arguments{
-\item{df}{Data frame object containing bibliometric data. This data frame must have at least two columns: one for keywords and one for citation counts. An optional column for unique identifiers may be included. Each row in the data frame should represent a document or publication.}
+\item{df}{Data frame object containing bibliometric data. This data frame must
+have at least two columns: one for keywords and one for citation counts.
+An optional column for unique identifiers may be included. Each row in the
+data frame should represent a document or publication.}
 
-\item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs. Only required when 'plot' parameter is set to "TRUE". Default set to NULL.}
+\item{id}{Character string specifying the name of the column in "df" that
+contains unique identifiers for each document. Each cell in this column
+must contain a single ID (unless missing) and not multiple IDs. Must be included
+when 'plot' parameter is set to "TRUE". Default set to NULL.}
 
-\item{cit}{Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.}
+\item{cit}{Character string specifying the name of the column in "df" that
+contains the number of citations each document has received. Citations must
+be represented as integers. Each cell in this column should contain a single
+integer value (unless missing) representing the citation count for the
+corresponding document.}
 
-\item{plot}{Logical value indicating whether to generate and display a plot of the h-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".}
+\item{plot}{Logical value indicating whether to generate and display a plot of
+the h-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" (default)
+or "F" to skip plot generation.}
 }
 \value{
-h-index value and plot.
+h-index magnitude and optional plot.
 }
 \description{
-Calculate h-index for an institution using bibliometric data from an edge list, with an optional visualisation of ranked citation scores.
+Calculate h-index for an institution using bibliometric data from an edge list,
+with an optional visualisation of ranked citation scores.
 }
 \examples{
-# Create an example data frame
-dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
-                   id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
-                   categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
+# Load example data
+data(WoSdata)
 
-# Calculate h-index
-h_index(df = dat1, cit = "citations")
-
-# Create another example data frame
-dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
-                   id = c("123", "234", "345", "456", "567", "678", "789"),
-                   categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
-
-# Calculate h-index
-h_index(df = dat2, id = "id", cit = "citations", plot = FALSE)
-
-# Create another example data frame
-dat3 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
-                   id = c(123, 234, 345, 456, 567, 678, 789),
-                   categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
-
-# Calculate h-index and produce plot
-h_index(df = dat3, id = "id", cit = "citations", plot = TRUE)
+# Calculate h-index with produce plot
+h_index(df = WoSdata,
+        id = "UT.Unique.WOS.ID",
+        cit = "Times.Cited.WoS.Core",
+        plot = TRUE)
 
 }

@@ -2,57 +2,60 @@
 % Please edit documentation in R/x_index.R
 \name{x_index}
 \alias{x_index}
-\title{x_index}
+\title{x_index - Expertise (x-) Index}
 \usage{
 x_index(df, kw, id, cit, type = "h", dlm = ";", plot = FALSE)
 }
 \arguments{
-\item{df}{Data frame object containing bibliometric data. This data frame must have at least three columns: one for keywords, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.}
+\item{df}{Data frame object containing bibliometric data. This data frame
+must have at least three columns: one for keywords, one for unique IDs, and
+one for citation counts. Each row in the data frame should represent a
+document or publication.}
 
-\item{kw}{Character string specifying the name of the column in "df" that contains keywords. Each cell in this column may contain no keywords (missing), a single keyword or multiple keywords separated by a specified delimiter.}
+\item{kw}{Character string specifying the name of the column in "df" that
+contains keywords. Each cell in this column may contain no keywords
+(missing), a single keyword or multiple keywords separated by a specified
+delimiter.}
 
-\item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs.}
+\item{id}{Character string specifying the name of the column in "df" that
+contains unique identifiers for each document. Each cell in this column must
+contain a single ID (unless missing) and not multiple IDs.}
 
-\item{cit}{Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.}
+\item{cit}{Character string specifying the name of the column in "df" that
+contains the number of citations each document has received. Citations must
+be represented as integers. Each cell in this column should contain a single
+integer value (unless missing) representing the citation count for the
+corresponding document.}
 
-\item{type}{"h" for Hirsch's h-type index or "g" for Egghe's g-type index. Default set to "h".}
+\item{type}{"h" (default) for Hirsch's h-type index or "g" for Egghe's g-type index.}
 
-\item{dlm}{Character string specifying the delimiter used in the "kw" column to separate multiple keywords within a single cell. The delimiter should be consistent across the entire "kw" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".}
+\item{dlm}{Character string specifying the delimiter used in the "kw"
+column to separate multiple keywords within a single cell. The delimiter
+should be consistent across the entire "kw" column. Common delimiters
+include ";" (default), "/", ":", and ",".}
 
-\item{plot}{Logical value indicating whether to generate and display a plot of the x-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".}
+\item{plot}{Logical value indicating whether to generate and display a
+plot of the x-index calculation. Set to "TRUE" or "T" to generate the plot,
+and "FALSE" (default) or "F" to skip plot generation.}
 }
 \value{
-x-index value and plot.
+x-index magnitude, core keywords, and optional plot.
 }
 \description{
-Calculate x-index for an institution using bibliometric data from an edge list, with an optional visualisation of ranked citation scores. The function is suitable for including inside loops when plotting parameter is set to "FALSE" or "F".
+Calculate x-index for an institution using bibliometric data from an edge
+list, with an optional visualisation of ranked citation scores. The function
+is suitable for including inside loops when plotting parameter is set to
+"FALSE" or "F".
 }
 \examples{
-# Create an example data frame
-dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
-                   id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
-                   categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
+# Load example data
+data(WoSdata)
 
-# Calculate h-type x-index
-x_index(df = dat1, kw = "keywords", id = "id", cit = "citations")
-
-# Create another example data frame
-dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
-                   id = c("123", "234", "345", "456", "567", "678", "789"),
-                   categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
-
-# Calculate g-type x-index
-x_index(df = dat2, kw = "keywords", id = "id", cit = "citations", type = "g", dlm = "/")
-
-# Create another example data frame
-dat3 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
-                   id = c(123, 234, 345, 456, 567, 678, 789),
-                   categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
-
-# Calculate h-type x-index and produce plot
-x_index(df = dat3, kw = "keywords", id = "id", cit = "citations", dlm = ",", plot = TRUE)
+# Calculate x-index with plot
+x_index(df = WoSdata,
+        id = "UT.Unique.WOS.ID",
+        kw = "Keywords.Plus",
+        cit = "Times.Cited.WoS.Core",
+        plot = TRUE)
 
 }

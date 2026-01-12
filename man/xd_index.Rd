@@ -2,57 +2,88 @@
 % Please edit documentation in R/xd_index.R
 \name{xd_index}
 \alias{xd_index}
-\title{xd_index}
+\title{xd_index - Expertise Diversity (xd-) Index}
 \usage{
-xd_index(df, cat, id, cit, type = "h", dlm = ";", plot = FALSE)
+xd_index(
+  df,
+  cat,
+  id,
+  cit,
+  mfc = NULL,
+  type = "h",
+  dlm = ";",
+  variant = "full",
+  plot = FALSE
+)
 }
 \arguments{
-\item{df}{Data frame object containing bibliometric data. This data frame must have at least three columns: one for categories, one for unique IDs, and one for citation counts. Each row in the data frame should represent a document or publication.}
+\item{df}{Data frame object containing bibliometric data. Must have at least
+three columns: one for categories, one for unique IDs, and one for citation
+counts.}
 
-\item{cat}{Character string specifying the name of the column in "df" that contains categories. Each cell in this column may contain no categories (missing), a single category or multiple categories separated by a specified delimiter.}
+\item{cat}{Character string specifying the name of the column in "df" that contains categories.
+Categories can be multiple separated by a delimiter.}
 
-\item{id}{Character string specifying the name of the column in "df" that contains unique identifiers for each document. Each cell in this column must contain a single ID (unless missing) and not multiple IDs.}
+\item{id}{Character string specifying the name of the column in "df" that
+contains unique identifiers for each document. Each cell in this column must
+contain a single ID (unless missing) and not multiple IDs.}
 
-\item{cit}{Character string specifying the name of the column in "df" that contains the number of citations each document has received. Citations must be represented as integers. Each cell in this column should contain a single integer value (unless missing) representing the citation count for the corresponding document.}
+\item{cit}{Character string specifying the name of the column in "df" that
+contains the number of citations each document has received. Citations must
+be represented as integers. Each cell in this column should contain a single
+integer value (unless missing) representing the citation count for the
+corresponding document.}
 
-\item{type}{"h" for Hirsch's h-type index or "g" for Egghe's g-type index. Default set to "h".}
+\item{mfc}{Data frame with columns 'cat' and 'mean_cit'. Optionally required to
+utilise population means when variant set to "f".}
 
-\item{dlm}{Character string specifying the delimiter used in the "cat" column to separate multiple categories within a single cell. The delimiter should be consistent across the entire "cat" column. Common delimiters include ";", "/", ":", and ",". The default delimiter is set to ";".}
+\item{type}{"h" (default) for Hirsch's h-type index or "g" for Egghe's g-type index.}
 
-\item{plot}{Logical value indicating whether to generate and display a plot of the xd-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" or "F" to skip plot generation. The default is "FALSE".}
+\item{dlm}{Character string specifying the delimiter used in the "cat" column
+to separate multiple categories within a single cell. The delimiter should be
+consistent across the entire "cat" column. Common delimiters include ";" (default), "/",
+":", and ",".}
+
+\item{variant}{One of "full" (default), "f", or "FN".
+\itemize{
+  \item \code{"full"} — Computes the unconditional xd-index.
+  \item \code{"f"} — Computes the fractional xd-index. If set to 'f', input data
+   frame 'df' must include an 'inst_count' column which gives the number of institutions
+   per publication.
+  \item \code{"FN"} — Computes the field-normalised xd-index. If set to 'FN', input
+   may optionally include an 'mfc' data frame  which gives the population
+   level mean citations for different fields. If not provided, sample mean field citations will be used.
+}}
+
+\item{plot}{Logical value indicating whether to generate and display a plot of
+the xd-index calculation. Set to "TRUE" or "T" to generate the plot, and "FALSE" (default)
+or "F" to skip plot generation.}
 }
 \value{
-xd-index value and plot.
+xd-index magnitude, core categories, and optional plot.
 }
 \description{
-Calculates xd-index for an institution using bibliometric data from an edge list, with an optional visualisation of ranked citation scores. The function is suitable for including inside loops when plotting parameter is set to "FALSE" or "F".
+Calculate the xd-index (and its variants, field-normalized and fractional)
+for an institution using bibliometric data from an edge list, with an optional
+visualisation of ranked citation scores.
 }
 \examples{
-# Create an example data frame
-dat1 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a; b; c", "b; d", "c", "d", "e; g", "f", "g"),
-                   id = c("abc123", "bcd234", "def345", "efg456", "fgh567", "ghi678", "hij789"),
-                   categories = c("a; d; e", "b", "c", "d; g", "e", "f", "g"))
+# Load example data
+data(WoSdata)
 
-# Calculate h-type xd-index
-xd_index(df = dat1, cat = "categories", id = "id", cit = "citations")
+# Calculate xd-index with plot
+xd_index(df = WoSdata,
+         id = "UT.Unique.WOS.ID",
+         cat = "WoS.Categories",
+         cit = "Times.Cited.WoS.Core",
+         plot = TRUE)
 
-# Create another example data frame
-dat2 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a/ b/ c", "b/ d", "c", "d", "e/ g", "f", "g"),
-                   id = c("123", "234", "345", "456", "567", "678", "789"),
-                   categories = c("a/ d/ e", "b", "c", "d/ g", "e", "f", "g"))
-
-# Calculate g-type xd-index
-xd_index(df = dat2, cat = "categories", id = "id", cit = "citations", type = "g", dlm = "/")
-
-# Create another example data frame
-dat3 <- data.frame(citations = c(0, 1, 1, 2, 3, 5, 8),
-                   keywords = c("a, b, c", "b, d", "c", "d", "e, g", "f", "g"),
-                   id = c(123, 234, 345, 456, 567, 678, 789),
-                   categories = c("a: d: e", "b", "c", "d: g", "e", "f", "g"))
-
-# Calculate h-type xd-index and produce plot
-xd_index(df = dat3, cat = "categories", id = "id", cit = "citations", dlm = ":", plot = TRUE)
+# Calculate field-normalised xd-index with plot
+xd_index(df = WoSdata,
+         id = "UT.Unique.WOS.ID",
+         cat = "WoS.Categories",
+         cit = "Times.Cited.WoS.Core",
+         variant = "FN",
+         plot = TRUE)
 
 }
