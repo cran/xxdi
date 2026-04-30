@@ -1,7 +1,7 @@
-#' @title xc_index - Category-adjusted Expertise Index
+#' @title xo_index - Overall Expertise Index
 #'
 #' @description
-#' Calculate the xc-index for an institution using bibliometric data from an
+#' Calculate the xo-index for an institution using bibliometric data from an
 #' edge list, with an optional plot visualisation. The function is suitable
 #' for including inside loops when plotting parameter is set to "FALSE" or "F".
 #'
@@ -32,17 +32,17 @@
 #'  is used for categories. Common delimiters include ";", "/", ":", and ",", and example usage
 #'  should be similar to 'c(";", ";")' (default), 'c(";", ",")', or 'c(",", ":")'.
 #' @param plot Logical value indicating whether to generate and display a plot
-#' of the xc-index calculation. Set to "TRUE" or "T" to generate the plot, and
+#' of the xo-index calculation. Set to "TRUE" or "T" to generate the plot, and
 #' "FALSE" (default) or "F" to skip plot generation.
 #'
-#' @return xc-index magnitude, core category specific keywords and optional plot.
+#' @return xo-index magnitude, core categories and optional plot.
 #'
 #' @examples
 #' # Load example data
 #' data(WoSdata)
 #'
-#' # Calculate xc-index with plot
-#' xc_index(df = WoSdata,
+#' # Calculate xo-index with plot
+#' xo_index(df = WoSdata,
 #'          id = "UT.Unique.WOS.ID",
 #'          kw = "Keywords.Plus",
 #'          cat = "WoS.Categories",
@@ -56,7 +56,7 @@
 #' @importFrom stats na.omit
 #' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
 
-xc_index <- function(df,
+xo_index <- function(df,
                      kw,
                      cat,
                      id,
@@ -72,8 +72,7 @@ xc_index <- function(df,
     }
   }
 
-  # declare global variables
-  kc <- NULL
+  x <- NULL
   total_cit <- NULL
 
   # Working data frame
@@ -88,58 +87,73 @@ xc_index <- function(df,
                   cit = as.numeric(cit)) %>%
     stats::na.omit()
 
-  # Clean dataset
+  # clean working data frame
   dat <- dat %>%
     tidyr::separate_rows(kw, sep = as.character(dlm[1])) %>%
     tidyr::separate_rows(cat, sep = as.character(dlm[2])) %>%
     dplyr::mutate(kw = trimws(kw), cat = trimws(cat)) %>%
+    dplyr::filter(cat != "") %>%
     dplyr::filter(kw != "") %>%
-    dplyr::mutate(kc = paste0(kw, " (", cat, ")")) %>%
-    stats::na.omit()
-
-  # Sum citations per category specific keyword
-  dat <- dat %>%
-    dplyr::mutate(kc = trimws(kc)) %>%
-    dplyr::group_by(kc) %>%
+    stats::na.omit() %>%
+    dplyr::group_by(cat, kw) %>%
     dplyr::summarise(total_cit = sum(cit), .groups = "drop")
 
-  # Sum citations for each keyword
-  col_sum_citation_matrix <- dat$total_cit
-  names(col_sum_citation_matrix) <- dat$kc
-
-  # Calculate xc-index
+  # Calculate h-type xo-index
   if (type == "h") {
-    xc_index <- agop::index.h(unname(col_sum_citation_matrix))
-  } else if (type == "g") {
-    xc_index <- agop::index.g(unname(col_sum_citation_matrix))
+    dat <- dat %>%
+      dplyr::group_by(cat) %>%
+      dplyr::summarise(x = agop::index.h(total_cit),
+                       .groups = "drop")
+
+    # Sum citations for each keyword
+    col_sum_citation_matrix <- dat$x
+    names(col_sum_citation_matrix) <- dat$cat
+
+    # xo-index
+    xo_index <- agop::index.h(unname(col_sum_citation_matrix))
+  }
+
+  # Calculate g-type xo-index
+  if (type == "g") {
+    dat <- dat %>%
+      dplyr::group_by(cat) %>%
+      dplyr::summarise(x = agop::index.g(total_cit),
+                       .groups = "drop")
+
+    # Sum citations for each keyword
+    col_sum_citation_matrix <- dat$x
+    names(col_sum_citation_matrix) <- dat$cat
+
+    # xo-index
+    xo_index <- agop::index.g(unname(col_sum_citation_matrix))
   }
 
   # get keywords whose citation counts meet the index threshold
   cit_sorted <- sort(col_sum_citation_matrix, decreasing = TRUE)
-  core_keywords <- names(cit_sorted)[seq_len(xc_index)]
+  core_keywords <- names(cit_sorted)[seq_len(xo_index)]
 
   if (plot) {
     # Prepare data for plotting
-    df_plot <- data.frame(kc = names(col_sum_citation_matrix), cit = col_sum_citation_matrix) %>%
+    df_plot <- data.frame(kw = names(col_sum_citation_matrix), cit = col_sum_citation_matrix) %>%
       dplyr::arrange(dplyr::desc(cit)) %>%
-      dplyr::mutate(kc = factor(kc, levels = kc))
+      dplyr::mutate(kw = factor(kw, levels = kw))
 
-    # Create and print ggplot for xc-index
+    # Create and print ggplot for x-index
     print(ggplot2::ggplot(df_plot) +
-            ggplot2::geom_point(ggplot2::aes(x = kc, y = cit), shape = 16) +
-            ggplot2::geom_segment(x = xc_index,
-                                  xend = xc_index,
+            ggplot2::geom_point(ggplot2::aes(x = kw, y = cit), shape = 16) +
+            ggplot2::geom_segment(x = xo_index,
+                                  xend = xo_index,
                                   y = -Inf,
                                   yend = Inf,
                                   color = "#ff0000",
                                   linetype = 2) +
-            ggplot2::xlab("Category-specific Keyword") +
-            ggplot2::ylab("Total Citations") +
-            ggplot2::ggtitle(label = "xc-index") +
+            ggplot2::xlab("Category") +
+            ggplot2::ylab("Number of Core Keywords") +
+            ggplot2::ggtitle(label = "xo-index") +
             ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5)))
   }
 
   # Return value
-  return(list(xc.index = xc_index,
-              xc.keywords = core_keywords))
+  return(list(xo.index = xo_index,
+              xo.keywords = core_keywords))
 }

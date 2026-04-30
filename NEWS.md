@@ -1,3 +1,12 @@
+# xxdi 1.26.4
+
+* Added new function to calculate xo-index.
+* Minor performance upgrades to all functions.
+* Implementing new package version nomenclature to represent CRAN upload date.
+* Added citation to preprint.
+
+--------------------------------------------------------------------------------
+
 # xxdi 1.3.1
 
 * Major performance upgrades.

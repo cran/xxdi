@@ -34,10 +34,11 @@
 #'         plot = TRUE)
 #'
 #' @export
-#' @importFrom dplyr %>% arrange desc mutate row_number select
-#' @importFrom agop index.h
+#' @importFrom dplyr %>% arrange desc filter mutate row_number select
+#' @importFrom agop index.h index.g
 #' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_hline geom_point ggplot theme ggtitle xlab ylab
+#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
+
 
 # Function to calculate h-index
 h_index <- function(df,
@@ -46,17 +47,10 @@ h_index <- function(df,
                     plot = FALSE) {
 
   # Load required libraries
-  if (!requireNamespace("agop", quietly = TRUE)) {
-    stop("Package 'agop' is required but not installed.")
-  }
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required but not installed.")
-  }
-  if (!requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Package 'dplyr' is required but not installed.")
-  }
-  if (!requireNamespace("stats", quietly = TRUE)) {
-    stop("Package 'stats' is required but not installed.")
+  for (pkg in c("agop","ggplot2","dplyr","stats")) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop("Package '", pkg, "' is required but not installed.")
+    }
   }
 
   if (is.null(id)) {
@@ -81,14 +75,14 @@ h_index <- function(df,
     if (plot) {
       # Prepare data for plotting
       df_plot <- dat %>%
-        dplyr::arrange(desc(cit)) %>%
+        dplyr::arrange(dplyr::desc(cit)) %>%
         dplyr::mutate(id = factor(id, levels = id))
 
       # Create and print ggplot for h-index
       print(ggplot2::ggplot(df_plot) +
               ggplot2::geom_point(ggplot2::aes(x = id, y = cit), shape = 16) +
               ggplot2::geom_vline(xintercept = h_index_value, color = "#ff0000", linetype = 2) +
-              ggplot2::xlab("Articles") +
+              ggplot2::xlab("Article") +
               ggplot2::ylab("Citations") +
               ggplot2::ggtitle("h-index") +
               ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5)))

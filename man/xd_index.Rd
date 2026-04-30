@@ -2,7 +2,7 @@
 % Please edit documentation in R/xd_index.R
 \name{xd_index}
 \alias{xd_index}
-\title{xd_index - Expertise Diversity (xd-) Index}
+\title{xd_index - Expertise Diversity Index}
 \usage{
 xd_index(
   df,

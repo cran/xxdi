@@ -33,10 +33,10 @@
 #'         plot = TRUE)
 #'
 #' @export
-#' @importFrom dplyr %>% arrange desc mutate row_number select
-#' @importFrom agop index.g
+#' @importFrom dplyr %>% arrange desc filter mutate row_number select
+#' @importFrom agop index.h index.g
 #' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_hline geom_point ggplot theme ggtitle xlab ylab
+#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
 
 # Function to calculate g-index
 g_index <- function(df,
@@ -45,17 +45,10 @@ g_index <- function(df,
                     plot = FALSE) {
 
   # Load required libraries
-  if (!requireNamespace("agop", quietly = TRUE)) {
-    stop("Package 'agop' is required but not installed.")
-  }
-  if (!requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Package 'dplyr' is required but not installed.")
-  }
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required but not installed.")
-  }
-  if (!requireNamespace("stats", quietly = TRUE)) {
-    stop("Package 'stats' is required but not installed.")
+  for (pkg in c("agop","ggplot2","dplyr","stats")) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop("Package '", pkg, "' is required but not installed.")
+    }
   }
 
   ### MAIN FUNCTION

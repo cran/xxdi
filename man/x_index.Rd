@@ -2,7 +2,7 @@
 % Please edit documentation in R/x_index.R
 \name{x_index}
 \alias{x_index}
-\title{x_index - Expertise (x-) Index}
+\title{x_index - Expertise Index}
 \usage{
 x_index(df, kw, id, cit, type = "h", dlm = ";", plot = FALSE)
 }

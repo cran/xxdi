@@ -1,4 +1,4 @@
-#' @title ivw_xd_index - Inverse Variance Weighted (IVW) Expertise Diversity (xd-) Index
+#' @title ivw_xd_index - Inverse Variance Weighted (IVW) Expertise Diversity Index
 #'
 #' @description
 #' Calculate IVW adjusted xd-index for an institution using bibliometric data from
@@ -47,9 +47,8 @@
 #' @export
 #' @importFrom tidyr separate_rows
 #' @importFrom dplyr %>% arrange desc filter mutate row_number select
-#' @importFrom Matrix colSums sparseMatrix
 #' @importFrom agop index.h index.g
-#' @importFrom stats na.omit var
+#' @importFrom stats na.omit
 #' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
 
 ivw_xd_index <- function(df,
@@ -62,23 +61,10 @@ ivw_xd_index <- function(df,
                          plot = FALSE) {
 
   # Load required libraries
-  if (!requireNamespace("Matrix", quietly = TRUE)) {
-    stop("Package 'Matrix' is required but not installed.")
-  }
-  if (!requireNamespace("agop", quietly = TRUE)) {
-    stop("Package 'agop' is required but not installed.")
-  }
-  if (!requireNamespace("tidyr", quietly = TRUE)) {
-    stop("Package 'tidyr' is required but not installed.")
-  }
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required but not installed.")
-  }
-  if (!requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Package 'dplyr' is required but not installed.")
-  }
-  if (!requireNamespace("stats", quietly = TRUE)) {
-    stop("Package 'stats' is required but not installed.")
+  for (pkg in c("agop","tidyr","ggplot2","dplyr","stats")) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop("Package '", pkg, "' is required but not installed.")
+    }
   }
 
   # declare global variable
@@ -179,7 +165,7 @@ ivw_xd_index <- function(df,
                                   yend = Inf,
                                   color = "#ff0000",
                                   linetype = 2) +
-            ggplot2::xlab("Categories") +
+            ggplot2::xlab("Category") +
             ggplot2::ylab("Total Citations") +
             ggplot2::ggtitle(label = "IVW xd-index") +
             ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5)))

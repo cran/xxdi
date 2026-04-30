@@ -1,4 +1,4 @@
-#' @title xd_index - Expertise Diversity (xd-) Index
+#' @title xd_index - Expertise Diversity Index
 #'
 #' @description
 #' Calculate the xd-index (and its variants, field-normalized and fractional)
@@ -61,13 +61,11 @@
 #'          plot = TRUE)
 #'
 #' @export
-#'
 #' @importFrom tidyr separate_rows
-#' @importFrom dplyr %>% arrange desc filter mutate row_number select left_join
-#' @importFrom Matrix colSums sparseMatrix
+#' @importFrom dplyr %>% arrange desc filter mutate row_number select
 #' @importFrom agop index.h index.g
 #' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot theme ggtitle xlab ylab
+#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
 
 #### Main function ---
 xd_index <- function(df,
@@ -81,7 +79,7 @@ xd_index <- function(df,
                      plot = FALSE) {
 
   # --- Package checks ---
-  for (pkg in c("Matrix","agop","tidyr","ggplot2","dplyr","stats")) {
+  for (pkg in c("agop","tidyr","ggplot2","dplyr","stats")) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
       stop("Package '", pkg, "' is required but not installed.")
     }
@@ -219,7 +217,7 @@ xd_index <- function(df,
                               yend = Inf,
                               color = "#ff0000",
                               linetype = 2) +
-        ggplot2::xlab("Categories") +
+        ggplot2::xlab("Category") +
         ggplot2::ylab(ifelse(variant == "f",
                              "Total Fractional Citations",
                              ifelse(variant == "FN", "Total Field-Normalised Citations", "Total Citations"))) +

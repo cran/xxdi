@@ -1,0 +1,12 @@
+bibentry(
+  bibtype = "Article",
+  title = "Expertise Indices: Variants, Modifications, Advancements, and Computational Tools in R",
+  author = c(
+    person("Abhirup", "Nandy"),
+    person("Nilabhra R.", "Das")
+  ),
+  journal = "arXiv preprint arXiv:2604.22811",
+  year = "2026",
+  url = "https://arxiv.org/abs/2604.22811",
+  doi = "10.48550/arXiv.2604.22811"
+)

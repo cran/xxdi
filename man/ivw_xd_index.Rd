@@ -2,7 +2,7 @@
 % Please edit documentation in R/ivw_xd_index.R
 \name{ivw_xd_index}
 \alias{ivw_xd_index}
-\title{ivw_xd_index - Inverse Variance Weighted (IVW) Expertise Diversity (xd-) Index}
+\title{ivw_xd_index - Inverse Variance Weighted (IVW) Expertise Diversity Index}
 \usage{
 ivw_xd_index(df, cat, id, cit, vfc = NULL, type = "h", dlm = ";", plot = FALSE)
 }
