@@ -44,12 +44,8 @@
 #'         cit = "Times.Cited.WoS.Core",
 #'         plot = TRUE)
 #'
-#' @export x_index
-#' @importFrom tidyr separate_rows
-#' @importFrom dplyr %>% arrange desc filter mutate row_number select
-#' @importFrom agop index.h index.g
-#' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
+#' @export
+#' @importFrom dplyr %>%
 
 # Function to calculate x-index
 x_index <- function(df,
@@ -59,18 +55,40 @@ x_index <- function(df,
                     type ="h",
                     dlm = ";",
                     plot = FALSE) {
+  # check inputs
+  checkmate::assert_data_frame(df, min.rows = 2, min.cols = 3, col.names = "named")
+  checkmate::assert_string(kw)
+  checkmate::assert_string(id)
+  checkmate::assert_string(cit)
+  checkmate::assert_names(colnames(df), must.include = c(kw, id, cit))
+  checkmate::assert_choice(type, choices = c("h", "g"))
+  checkmate::assert_character(dlm, len = 1)
+  checkmate::assert_flag(plot)
 
-  # Load required libraries
-  for (pkg in c("agop","tidyr","ggplot2","dplyr","stats")) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
-      stop("Package '", pkg, "' is required but not installed.")
-    }
+  # set classes of some inputs
+  # Convert 'cit' column safely if it isn't already an integer vector
+  if (!checkmate::test_integer(df[[cit]])) {
+    df[[cit]] <- as.integer(df[[cit]])
+  }
+  checkmate::assert_integer(df[[cit]], len = nrow(df), lower = 0)
+  # Convert 'kw' column safely if it isn't already a character vector
+  if (!checkmate::test_character(df[[kw]], any.missing = TRUE)) {
+    # Keep track of where real missing values are
+    na_mask <- is.na(df[[kw]])
+    df[[kw]] <- as.character(df[[kw]])
+    # Restore true NA values so they don't become the string "NA"
+    df[[kw]][na_mask] <- NA_character_
+  }
+  # Convert 'id' column safely if it is provided and not already character
+  if (!checkmate::test_character(df[[id]], any.missing = TRUE)) {
+    na_mask <- is.na(df[[id]])
+    df[[id]] <- as.character(df[[id]])
+    df[[id]][na_mask] <- NA_character_
   }
 
   # Working data frame
   dat <- df %>%
     dplyr::select(kw = {{kw}}, id = {{id}}, cit = {{cit}}) %>%
-    dplyr::mutate(kw = as.character(kw), id = as.character(id), cit = as.numeric(cit)) %>%
     stats::na.omit()
 
   # Clean dataset

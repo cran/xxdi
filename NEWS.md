@@ -1,3 +1,10 @@
+# xxdi 1.26.8
+
+* Added checkmate checks within functions.
+* Other minor changes to code structure.
+
+--------------------------------------------------------------------------------
+
 # xxdi 1.26.4
 
 * Added new function to calculate xo-index.

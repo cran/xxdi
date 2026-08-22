@@ -9,10 +9,11 @@ xd_index(
   cat,
   id,
   cit,
+  inst = NULL,
   mfc = NULL,
   type = "h",
   dlm = ";",
-  variant = "full",
+  variant = "U",
   plot = FALSE
 )
 }
@@ -34,7 +35,13 @@ be represented as integers. Each cell in this column should contain a single
 integer value (unless missing) representing the citation count for the
 corresponding document.}
 
-\item{mfc}{Data frame with columns 'cat' and 'mean_cit'. Optionally required to
+\item{inst}{Character string specifying the name of the column in "df" that
+contains the number of institutions that contributed to each document. The
+number of institutions must be represented as integers. Each cell in this
+column should contain a single integer value (unless missing) representing
+the institution count for the corresponding document.}
+
+\item{mfc}{Data frame with columns 'cat' and 'mean'. Optionally required to
 utilise population means when variant set to "f".}
 
 \item{type}{"h" (default) for Hirsch's h-type index or "g" for Egghe's g-type index.}
@@ -44,9 +51,10 @@ to separate multiple categories within a single cell. The delimiter should be
 consistent across the entire "cat" column. Common delimiters include ";" (default), "/",
 ":", and ",".}
 
-\item{variant}{One of "full" (default), "f", or "FN".
+\item{variant}{One of "U" (default) for the standard unconditional  variant,
+"f" for the fractional variant, and "FN" for the field-normalised variant.
 \itemize{
-  \item \code{"full"} — Computes the unconditional xd-index.
+  \item \code{"U"} — Computes the unconditional xd-index.
   \item \code{"f"} — Computes the fractional xd-index. If set to 'f', input data
    frame 'df' must include an 'inst_count' column which gives the number of institutions
    per publication.

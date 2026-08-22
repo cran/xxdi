@@ -18,16 +18,22 @@
 #'  be represented as integers. Each cell in this column should contain a single
 #'  integer value (unless missing) representing the citation count for the
 #'  corresponding document.
-#' @param mfc Data frame with columns 'cat' and 'mean_cit'. Optionally required to
+#' @param inst Character string specifying the name of the column in "df" that
+#'  contains the number of institutions that contributed to each document. The
+#'  number of institutions must be represented as integers. Each cell in this
+#'  column should contain a single integer value (unless missing) representing
+#'  the institution count for the corresponding document.
+#' @param mfc Data frame with columns 'cat' and 'mean'. Optionally required to
 #'  utilise population means when variant set to "f".
 #' @param type "h" (default) for Hirsch's h-type index or "g" for Egghe's g-type index.
 #' @param dlm Character string specifying the delimiter used in the "cat" column
 #'  to separate multiple categories within a single cell. The delimiter should be
 #'  consistent across the entire "cat" column. Common delimiters include ";" (default), "/",
 #'  ":", and ",".
-#' @param variant One of "full" (default), "f", or "FN".
+#' @param variant One of "U" (default) for the standard unconditional  variant,
+#' "f" for the fractional variant, and "FN" for the field-normalised variant.
 #' \itemize{
-#'   \item \code{"full"} — Computes the unconditional xd-index.
+#'   \item \code{"U"} — Computes the unconditional xd-index.
 #'   \item \code{"f"} — Computes the fractional xd-index. If set to 'f', input data
 #'    frame 'df' must include an 'inst_count' column which gives the number of institutions
 #'    per publication.
@@ -61,37 +67,73 @@
 #'          plot = TRUE)
 #'
 #' @export
-#' @importFrom tidyr separate_rows
-#' @importFrom dplyr %>% arrange desc filter mutate row_number select
-#' @importFrom agop index.h index.g
-#' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
+#' @importFrom dplyr %>%
 
 #### Main function ---
 xd_index <- function(df,
                      cat,
                      id,
                      cit,
+                     inst = NULL,
                      mfc = NULL,
                      type = "h",
                      dlm = ";",
-                     variant = "full",
+                     variant = "U",
                      plot = FALSE) {
 
-  # --- Package checks ---
-  for (pkg in c("agop","tidyr","ggplot2","dplyr","stats")) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
-      stop("Package '", pkg, "' is required but not installed.")
+  # check inputs
+  checkmate::assert_data_frame(df, min.rows = 2, min.cols = 3, col.names = "named")
+  checkmate::assert_string(cat)
+  checkmate::assert_string(id)
+  checkmate::assert_string(cit)
+  checkmate::assert_names(colnames(df), must.include = c(cat, id, cit))
+  if (!is.null(mfc)) {
+    checkmate::assert_data_frame(mfc, any.missing = FALSE)
+    checkmate::assert_names(colnames(mfc), must.include = c("cat", "mean"))
+    checkmate::assert_character(mfc$cat, len = nrow(mfc))
+    checkmate::assert_numeric(mfc$mean, len = nrow(mfc), lower = 0)
+  }
+  checkmate::assert_choice(type, choices = c("h", "g"))
+  checkmate::assert_character(dlm, len = 1)
+  checkmate::assert_choice(variant, choices = c("U", "f", "FN"))
+  if (variant == "f") {
+    checkmate::assert_string(inst)
+    checkmate::assert_names(colnames(df), must.include = c(inst))
+    if (!checkmate::test_integer(df[[inst]])) {
+      df[[inst]] <- as.integer(df[[inst]])
     }
+    checkmate::assert_integer(df[[inst]], len = nrow(df), lower = 1)
+  }
+  checkmate::assert_flag(plot)
+
+  # set classes of some inputs
+  # Convert 'cit' column safely if it isn't already an integer vector
+  if (!checkmate::test_integer(df[[cit]])) {
+    df[[cit]] <- as.integer(df[[cit]])
+  }
+  checkmate::assert_integer(df[[cit]], len = nrow(df), lower = 0)
+  # Convert 'cat' column safely if it isn't already a character vector
+  if (!checkmate::test_character(df[[cat]], any.missing = TRUE)) {
+    # Keep track of where real missing values are
+    na_mask <- is.na(df[[cat]])
+    df[[cat]] <- as.character(df[[cat]])
+    # Restore true NA values so they don't become the string "NA"
+    df[[cat]][na_mask] <- NA_character_
+  }
+  # Convert 'id' column safely if it is provided and not already character
+  if (!checkmate::test_character(df[[id]], any.missing = TRUE)) {
+    na_mask <- is.na(df[[id]])
+    df[[id]] <- as.character(df[[id]])
+    df[[id]][na_mask] <- NA_character_
   }
 
   # declare global variable
-  mean_cit <- NULL
+  mean <- NULL
 
-  # --- Helper: fractional variant ---
+  # Helper: fractional variant
   xd_index_fractional <- function(dat) {
 
-    dat$cit <- dat$cit / dat$inst_count
+    dat$cit <- dat$cit / dat$inst
 
     dat <- dat %>%
       dplyr::group_by(cat)
@@ -100,7 +142,7 @@ xd_index <- function(df,
   }
 
 
-  # --- Helper: field-normalized variant ---
+  # Helper: field-normalized variant
   xd_index_normalised <- function(dat, mfc) {
 
     if (is.null(mfc)) {
@@ -108,7 +150,7 @@ xd_index <- function(df,
 
       dat <- dat %>%
         dplyr::group_by(cat) %>%
-        dplyr::mutate(mean_cit = mean(cit, na.rm = TRUE))
+        dplyr::mutate(mean = mean(cit, na.rm = TRUE))
     } else {
       dat <- dat %>%
         dplyr::group_by(cat)
@@ -117,50 +159,38 @@ xd_index <- function(df,
     }
 
     # check for missing mean citations
-    mean_cit_na <- length(unique(dat$cat[is.na(dat$mean_cit)]))
+    mean_na <- length(unique(dat$cat[is.na(dat$mean)]))
 
-    if (mean_cit_na > 0) {
-      message(paste0("Found missing mean citations for ", mean_cit_na, " category(s). Excluding publication(s)."))
-      dat <- dat[!is.na(dat$mean_cit), ]
+    if (mean_na > 0) {
+      message(paste0("Found missing mean citations for ", mean_na, " category(s). Excluding publication(s)."))
+      dat <- dat[!is.na(dat$mean), ]
     }
 
     # check for zero means
-    mean_cit_zero <- length(unique(dat$cat[dat$mean_cit == 0]))
+    mean_zero <- length(unique(dat$cat[dat$mean == 0]))
 
-    if (mean_cit_zero > 0) {
+    if (mean_zero > 0) {
       # print out zero variance categories
-      zero_mean_idx <- dat$mean_cit == 0
+      zero_mean_idx <- dat$mean == 0
       zero_mean_cats <- unique(dat$cat[zero_mean_idx])
-      message(paste0("Found ", mean_cit_zero, " category(s) with zero variance(s): ",
-                     paste(zero_mean_cats, collapse = "; ")))
-
-      message("Replacing with 0.01 to allow index calculations.")
-      message("It is recommended to check why category(s) produced zero means.")
-      dat$mean_cit[dat$mean_cit == 0] <- 0.01
+      message(paste0("Found ", mean_zero, " category(s) with zero variance(s): ", paste(zero_mean_cats, collapse = ";"), ". Replacing with 0.01 to allow index calculations. It is recommended to check why category(s) produced zero means."))
+      dat$mean[dat$mean == 0] <- 0.01
     }
 
-    dat <- dat %>% dplyr::mutate(cit = cit / mean_cit)
+    dat <- dat %>% dplyr::mutate(cit = cit / mean)
 
     return(dat)
   }
 
-  # --- Working data frame ---
-  dat <- df %>%
-    dplyr::select(cat = {{cat}},
-                  id = {{id}},
-                  cit = {{cit}},
-                  dplyr::everything()) %>%
-    dplyr::mutate(cat = as.character(cat),
-                  id = as.character(id),
-                  cit = as.numeric(cit)) %>%
-    stats::na.omit()
-
-  # check for institution count column in df
+  # Working data frame
   if (variant == "f") {
-    # If inst_count not provided, build it
-    if (!"inst_count" %in% colnames(dat)) {
-      stop("Institution counts per 'inst_count' not provided.")
-    }
+    dat <- df %>%
+      dplyr::select(cat = {{cat}}, id = {{id}}, cit = {{cit}}, inst = {{inst}}) %>%
+      stats::na.omit()
+  } else {
+    dat <- df %>%
+      dplyr::select(cat = {{cat}}, id = {{id}}, cit = {{cit}}) %>%
+      stats::na.omit()
   }
 
   # Split multiple categories
@@ -175,7 +205,7 @@ xd_index <- function(df,
     dat <- xd_index_normalised(dat, mfc)
   } else if (variant == "f") {
     dat <- xd_index_fractional(dat)
-  } else {
+  } else if (variant == "U") {
     dat <- dat %>%
       dplyr::group_by(cat)
   }
@@ -203,13 +233,11 @@ xd_index <- function(df,
 
   # --- Plot (optional) ---
   if (plot) {
-    df_plot <- data.frame(cat = names(col_sum_citation_matrix),
-                          cit = col_sum_citation_matrix) %>%
+    df_plot <- data.frame(cat = names(col_sum_citation_matrix), cit = col_sum_citation_matrix) %>%
       dplyr::arrange(dplyr::desc(cit)) %>%
       dplyr::mutate(cat = factor(cat, levels = cat))
 
-    print(
-      ggplot2::ggplot(df_plot) +
+    print(ggplot2::ggplot(df_plot) +
         ggplot2::geom_point(ggplot2::aes(x = cat, y = cit), shape = 16) +
         ggplot2::geom_segment(x = xd_val,
                               xend = xd_val,

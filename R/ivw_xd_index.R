@@ -20,8 +20,9 @@
 #'  be represented as integers. Each cell in this column should contain a single
 #'  integer value (unless missing) representing the citation count for the
 #'  corresponding document.
-#' @param vfc Data frame with columns 'cat' and 'var_cit'. Optionally required
-#'  for using population variances.
+#' @param vfc Data frame with columns 'cat' and 'var'. Optionally required
+#'  for using population variances. If not provided estimated sample variances
+#'  will be used.
 #' @param type "h" (default) for Hirsch's h-type index or "g" for Egghe's g-type index.
 #' @param dlm Character string specifying the delimiter used in the "cat" column
 #'  to separate multiple categories within a single cell. The delimiter should be
@@ -45,11 +46,7 @@
 #'         plot = TRUE)
 #'
 #' @export
-#' @importFrom tidyr separate_rows
-#' @importFrom dplyr %>% arrange desc filter mutate row_number select
-#' @importFrom agop index.h index.g
-#' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
+#' @importFrom dplyr %>%
 
 ivw_xd_index <- function(df,
                          cat,
@@ -60,20 +57,49 @@ ivw_xd_index <- function(df,
                          dlm = ";",
                          plot = FALSE) {
 
-  # Load required libraries
-  for (pkg in c("agop","tidyr","ggplot2","dplyr","stats")) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
-      stop("Package '", pkg, "' is required but not installed.")
-    }
+  # check inputs
+  checkmate::assert_data_frame(df, min.rows = 2, min.cols = 3, col.names = "named")
+  checkmate::assert_string(cat)
+  checkmate::assert_string(id)
+  checkmate::assert_string(cit)
+  checkmate::assert_names(colnames(df), must.include = c(cat, id, cit))
+  if (!is.null(vfc)) {
+    checkmate::assert_data_frame(vfc, any.missing = FALSE)
+    checkmate::assert_names(colnames(vfc), must.include = c("cat", "var"))
+    checkmate::assert_character(vfc$cat, len = nrow(vfc))
+    checkmate::assert_numeric(vfc$var, len = nrow(vfc), lower = 0)
+  }
+  checkmate::assert_choice(type, choices = c("h", "g"))
+  checkmate::assert_character(dlm, len = 1)
+  checkmate::assert_flag(plot)
+
+  # set classes of some inputs
+  # Convert 'cit' column safely if it isn't already an integer vector
+  if (!checkmate::test_integer(df[[cit]])) {
+    df[[cit]] <- as.integer(df[[cit]])
+  }
+  checkmate::assert_integer(df[[cit]], len = nrow(df), lower = 0)
+  # Convert 'cat' column safely if it isn't already a character vector
+  if (!checkmate::test_character(df[[cat]])) {
+    # Keep track of where real missing values are
+    na_mask <- is.na(df[[cat]])
+    df[[cat]] <- as.character(df[[cat]])
+    # Restore true NA values so they don't become the string "NA"
+    df[[cat]][na_mask] <- NA_character_
+  }
+  # Convert 'id' column safely if it is provided and not already character
+  if (!checkmate::test_character(df[[id]])) {
+    na_mask <- is.na(df[[id]])
+    df[[id]] <- as.character(df[[id]])
+    df[[id]][na_mask] <- NA_character_
   }
 
   # declare global variable
-  var_cit <- NULL
+  var <- NULL
 
   # Working data frame
   dat <- df %>%
     dplyr::select(cat = {{cat}}, id = {{id}}, cit = {{cit}}) %>%
-    dplyr::mutate(cat = as.character(cat), id = as.character(id), cit = as.numeric(cit)) %>%
     stats::na.omit()
 
   # Clean dataset
@@ -85,49 +111,41 @@ ivw_xd_index <- function(df,
 
   # check vfc
   if (is.null(vfc)) {
-    message("'vfc' not provided. Computing category variances from provided data.")
+    message("'vfc' not provided. Estimating samples variances for categories from provided data.")
 
     dat <- dat %>%
       dplyr::group_by(cat) %>%
-      dplyr::mutate(var_cit = stats::var(cit, na.rm = TRUE))
+      dplyr::mutate(var = stats::var(cit, na.rm = TRUE))
   } else {
     dat <- dat %>%
-      dplyr::group_by(cat)
-
-    dat <- dplyr::left_join(dat, vfc, by = "cat")
+      dplyr::group_by(cat) %>%
+      dplyr::left_join(vfc, by = "cat")
   }
 
   # remove na variances
-  var_cit_na <- length(unique(dat$cat[is.na(dat$var_cit)]))
+  var_na <- length(unique(dat$cat[is.na(dat$var)]))
 
-  if (var_cit_na > 0) {
-    message(paste0("Variance cannot be computed for ", var_cit_na, " category(s)."))
-    message("Categories occurring only once are likely to result in NA variances.")
-    message(paste0("Excluding ", var_cit_na, " category(s)."))
+  if (var_na > 0) {
+    message(paste0("vfc missing variances (or sample variance cannot be estimated) for ", var_na, " category(s)."))
+    message(paste0("Excluding ", var_na, " category(s)."))
 
-    dat <- dat[!is.na(dat$var_cit), ]
+    dat <- dat[!is.na(dat$var), ]
   }
 
   # Replace zero-variance categories (cannot be weighted)
-  var_cit_zero <- length(unique(dat$cat[dat$var_cit == 0]))
-
-  if (var_cit_zero > 0) {
-
+  var_zero <- length(unique(dat$cat[dat$var == 0]))
+  if (var_zero > 0) {
     # print out zero variance categories
-    zero_var_idx <- dat$var_cit == 0
+    zero_var_idx <- dat$var == 0
     zero_var_cats <- unique(dat$cat[zero_var_idx])
-    message(paste0("Found ", var_cit_zero, " category(s) with zero variance(s): ",
-                   paste(zero_var_cats, collapse = "; ")))
+    message(paste0("Found ", var_zero, " category(s) with zero variance(s): ", paste(zero_var_cats, collapse = "; "), ". Replacing with '0.01' to allow index calculation. It is recommended to check why category(s) produced zero variances."))
 
-    message("Replacing with '0.01' to allow index calculation.")
-    message("It is recommended to check why category(s) produced zero variances.")
-
-    dat$var_cit[dat$var_cit == 0] <- 0.01
+    dat$var[dat$var == 0] <- 0.01
   }
 
   # ivw citations
   dat <- dat %>%
-    dplyr::mutate(cit = cit / var_cit)
+    dplyr::mutate(cit = cit / var)
 
   # Sum citations per category specific keyword
   dat <- dat %>%

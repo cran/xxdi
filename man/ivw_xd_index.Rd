@@ -26,8 +26,9 @@ be represented as integers. Each cell in this column should contain a single
 integer value (unless missing) representing the citation count for the
 corresponding document.}
 
-\item{vfc}{Data frame with columns 'cat' and 'var_cit'. Optionally required
-for using population variances.}
+\item{vfc}{Data frame with columns 'cat' and 'var'. Optionally required
+for using population variances. If not provided estimated sample variances
+will be used.}
 
 \item{type}{"h" (default) for Hirsch's h-type index or "g" for Egghe's g-type index.}
 

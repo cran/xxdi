@@ -50,11 +50,7 @@
 #'          plot = TRUE)
 #'
 #' @export
-#' @importFrom tidyr separate_rows
-#' @importFrom dplyr %>% arrange desc filter mutate row_number select
-#' @importFrom agop index.h index.g
-#' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
+#' @importFrom dplyr %>%
 
 xo_index <- function(df,
                      kw,
@@ -65,11 +61,44 @@ xo_index <- function(df,
                      dlm = c(";", ";"),
                      plot = FALSE) {
 
-  # Load required libraries
-  for (pkg in c("agop","tidyr","ggplot2","dplyr","stats")) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
-      stop("Package '", pkg, "' is required but not installed.")
-    }
+  # check inputs
+  checkmate::assert_data_frame(df, min.rows = 2, min.cols = 4, col.names = "named")
+  checkmate::assert_string(kw)
+  checkmate::assert_string(cat)
+  checkmate::assert_string(id)
+  checkmate::assert_string(cit)
+  checkmate::assert_names(colnames(df), must.include = c(kw, cat, id, cit))
+  checkmate::assert_choice(type, choices = c("h", "g"))
+  checkmate::assert_character(dlm, len = 2)
+  checkmate::assert_flag(plot)
+
+  # set classes of some inputs
+  # Convert 'cit' column safely if it isn't already an integer vector
+  if (!checkmate::test_integer(df[[cit]])) {
+    df[[cit]] <- as.integer(df[[cit]])
+  }
+  checkmate::assert_integer(df[[cit]], len = nrow(df), lower = 0)
+  # Convert 'kw' column safely if it isn't already a character vector
+  if (!checkmate::test_character(df[[kw]], any.missing = TRUE)) {
+    # Keep track of where real missing values are
+    na_mask <- is.na(df[[kw]])
+    df[[kw]] <- as.character(df[[kw]])
+    # Restore true NA values so they don't become the string "NA"
+    df[[kw]][na_mask] <- NA_character_
+  }
+  # Convert 'cat' column safely if it isn't already a character vector
+  if (!checkmate::test_character(df[[cat]], any.missing = TRUE)) {
+    # Keep track of where real missing values are
+    na_mask <- is.na(df[[cat]])
+    df[[cat]] <- as.character(df[[cat]])
+    # Restore true NA values so they don't become the string "NA"
+    df[[cat]][na_mask] <- NA_character_
+  }
+  # Convert 'id' column safely if it is provided and not already character
+  if (!checkmate::test_character(df[[id]], any.missing = TRUE)) {
+    na_mask <- is.na(df[[id]])
+    df[[id]] <- as.character(df[[id]])
+    df[[id]][na_mask] <- NA_character_
   }
 
   x <- NULL
@@ -77,20 +106,13 @@ xo_index <- function(df,
 
   # Working data frame
   dat <- df %>%
-    dplyr::select(kw = {{kw}},
-                  cat = {{cat}},
-                  id = {{id}},
-                  cit = {{cit}}) %>%
-    dplyr::mutate(kw = as.character(kw),
-                  cat = as.character(cat),
-                  id = as.character(id),
-                  cit = as.numeric(cit)) %>%
+    dplyr::select(kw = {{kw}}, cat = {{cat}}, id = {{id}}, cit = {{cit}}) %>%
     stats::na.omit()
 
   # clean working data frame
   dat <- dat %>%
-    tidyr::separate_rows(kw, sep = as.character(dlm[1])) %>%
-    tidyr::separate_rows(cat, sep = as.character(dlm[2])) %>%
+    tidyr::separate_rows(kw, sep = dlm[1]) %>%
+    tidyr::separate_rows(cat, sep = dlm[2]) %>%
     dplyr::mutate(kw = trimws(kw), cat = trimws(cat)) %>%
     dplyr::filter(cat != "") %>%
     dplyr::filter(kw != "") %>%
@@ -102,8 +124,7 @@ xo_index <- function(df,
   if (type == "h") {
     dat <- dat %>%
       dplyr::group_by(cat) %>%
-      dplyr::summarise(x = agop::index.h(total_cit),
-                       .groups = "drop")
+      dplyr::summarise(x = agop::index.h(total_cit), .groups = "drop")
 
     # Sum citations for each keyword
     col_sum_citation_matrix <- dat$x
@@ -117,8 +138,7 @@ xo_index <- function(df,
   if (type == "g") {
     dat <- dat %>%
       dplyr::group_by(cat) %>%
-      dplyr::summarise(x = agop::index.g(total_cit),
-                       .groups = "drop")
+      dplyr::summarise(x = agop::index.g(total_cit), .groups = "drop")
 
     # Sum citations for each keyword
     col_sum_citation_matrix <- dat$x

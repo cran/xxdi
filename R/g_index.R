@@ -33,10 +33,7 @@
 #'         plot = TRUE)
 #'
 #' @export
-#' @importFrom dplyr %>% arrange desc filter mutate row_number select
-#' @importFrom agop index.h index.g
-#' @importFrom stats na.omit
-#' @importFrom ggplot2 aes element_text geom_segment geom_point ggplot ggtitle theme xlab ylab
+#' @importFrom dplyr %>%
 
 # Function to calculate g-index
 g_index <- function(df,
@@ -44,19 +41,30 @@ g_index <- function(df,
                     cit,
                     plot = FALSE) {
 
-  # Load required libraries
-  for (pkg in c("agop","ggplot2","dplyr","stats")) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
-      stop("Package '", pkg, "' is required but not installed.")
-    }
+  # check inputs
+  checkmate::assert_data_frame(df, min.rows = 2, min.cols = 1)
+  checkmate::assert_string(cit)
+  checkmate::assert_names(colnames(df), must.include = cit)
+  if (!is.null(id)) {
+    checkmate::assert_string(id)
+    checkmate::assert_names(colnames(df), must.include = id)
+    checkmate::assert_vector(df[[id]], len = nrow(df), any.missing = FALSE)
   }
+  checkmate::assert_flag(plot)
+
+  # set input variables
+  # Convert 'cit' column safely if it isn't already an integer vector
+  if (!checkmate::test_integer(df[[cit]])) {
+    df[[cit]] <- as.integer(df[[cit]])
+  }
+  checkmate::assert_integer(df[[cit]], len = nrow(df), lower = 0)
 
   ### MAIN FUNCTION
   if (is.null(id)) {
     # Working data frame
     dat <- df %>%
       dplyr::select(cit = {{cit}}) %>%
-      dplyr::mutate(cit = as.numeric(cit)) %>%
+      dplyr::mutate(cit = cit) %>%
       stats::na.omit()
 
     # Calculate g-index
@@ -65,7 +73,7 @@ g_index <- function(df,
     # Working data frame
     dat <- df %>%
       dplyr::select(id = {{id}}, cit = {{cit}}) %>%
-      dplyr::mutate(id = as.character(id), cit = as.numeric(cit)) %>%
+      dplyr::mutate(id = as.character(id), cit = cit) %>%
       stats::na.omit()
 
     # Calculate g-index
